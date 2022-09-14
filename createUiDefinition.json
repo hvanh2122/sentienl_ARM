@@ -92,7 +92,7 @@
                                     "value": "Office365"
                                 },
                                 {
-                                    "label": "Azure ATP",
+                                    "label": "Microsoft Defender for Identity (formerly Azure Advanced Threat Protection)",
                                     "value": "AzureAdvancedThreatProtection"
                                 },
                                 {
@@ -100,15 +100,19 @@
                                     "value": "AzureActiveDirectory"
                                 },
                                 {
-                                    "label": "Microsoft Defender ATP",
+                                    "label": "Microsoft Defender for Endpoint (formerly Microsoft Defender Advanced Threat Protection)",
                                     "value": "MicrosoftDefenderAdvancedThreatProtection"
                                 },
                                 {
-                                    "label": "Azure Security Center",
+                                    "label": "Microsoft Defender for Cloud (formerly Azure Security Center and Azure Defender)",
                                     "value": "AzureSecurityCenter"
                                 },
                                 {
-                                    "label": "Microsoft Cloud App Security",
+                                    "label": "Dynamics365",
+                                    "value": "Dynamics365"
+                                },
+                                {
+                                    "label": "Microsoft Defender for Cloud Apps (formerly Microsoft Cloud App Security)",
                                     "value": "MicrosoftCloudAppSecurity"
                                 },
                                 {
