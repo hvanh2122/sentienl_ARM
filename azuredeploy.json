@@ -101,7 +101,7 @@
             }
         },
         "_artifactsLocation": {
-            "defaultValue": "https://raw.githubusercontent.com/hvanh2122/sentienl_ARM/",
+            "defaultValue": "https://raw.githubusercontent.com/hvanh2122/sentienl_ARM/blob/main/",
             "type": "String",
             "metadata": {
                 "description": "The location of resources"
