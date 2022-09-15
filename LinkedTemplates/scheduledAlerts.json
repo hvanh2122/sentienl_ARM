@@ -8,10 +8,16 @@
                 "description": "Name for the Log Analytics workspace"
             }
         },
-        "dataConnectorsList": {
-            "type": "string",
+        "dataConnectors": {
+            "type": "array",
             "metadata": {
-                "description": "Comma separated enabled connectors: AzureActivityLog,SecurityEvents,WindowsFirewall,DnsAnalytics. Reference: https://docs.microsoft.com/azure/templates/microsoft.operationalinsights/2020-03-01-preview/workspaces/datasources#microsoftoperationalinsightsworkspacesdatasources-object"
+                "description": "Data connectors: [\"AzureActivityLog\",\"SecurityEvents\",\"WindowsFirewall\",\"DnsAnalytics\"]. Reference: https://docs.microsoft.com/azure/templates/microsoft.operationalinsights/2020-03-01-preview/workspaces/datasources#microsoftoperationalinsightsworkspacesdatasources-object and https://github.com/Azure/Azure-Sentinel/blob/master/Tools/Sentinel-All-In-One/ARMTemplates/LinkedTemplates/scheduledAlerts.json"
+            }
+        },
+        "specificScheduledAlerts": {
+            "type": "array",
+            "metadata": {
+                "description": "Name of specific scheduled alert rules to enable. Reference: https://github.com/Azure/Azure-Sentinel/tree/master/Detections"
             }
         },
         "roleGuid": {
@@ -21,7 +27,9 @@
     },
     "functions": [],
     "variables": {
-        "identityName": "[concat('userIdentity',uniqueString(resourceGroup().id))]"
+        "identityName": "[concat('userIdentity',uniqueString(resourceGroup().id))]",
+        "initialArguments": "[concat('-Workspace ', parameters('workspaceName'), ' -ResourceGroup ', resourceGroup().name, ' -DataConnectors ', replace(replace(string(parameters('dataConnectors')), '[', ''), ']', ''))]",
+        "alertArguments": "[if(empty(parameters('specificScheduledAlerts')), variables('initialArguments'), concat(variables('initialArguments'), ' -Alerts ', replace(replace(replace(string(parameters('specificScheduledAlerts')), '[', ''), ']', ''), ' ','_')))]"
     },
     "resources": [
         {
@@ -31,12 +39,14 @@
             "location": "[resourceGroup().location]"
         },
         {
-            "dependsOn": ["[concat('Microsoft.ManagedIdentity/userAssignedIdentities/', variables('identityName'))]"],
             "type": "Microsoft.Resources/deploymentScripts",
             "apiVersion": "2020-10-01",
             "name": "sleep",
             "location": "[resourceGroup().location]",
             "kind": "AzurePowerShell",
+            "dependsOn": [
+                "[concat('Microsoft.ManagedIdentity/userAssignedIdentities/', variables('identityName'))]"
+            ],
             "properties": {
                 "forceUpdateTag": "1",
                 "azPowerShellVersion": "3.0",
@@ -52,33 +62,35 @@
             "apiVersion": "2017-09-01",
             "type": "Microsoft.Authorization/roleAssignments",
             "name": "[parameters('roleGuid')]",
+            "dependsOn": [
+                "[concat('Microsoft.Resources/deploymentScripts/', 'sleep')]"
+            ],
             "properties": {
                 "roleDefinitionId": "[concat('/subscriptions/', subscription().subscriptionId, '/providers/Microsoft.Authorization/roleDefinitions/', 'b24988ac-6180-42a0-ab88-20f7382dd24c')]",
                 "principalId": "[reference(resourceId('Microsoft.ManagedIdentity/userAssignedIdentities', variables('identityName')), '2018-11-30', 'Full').properties.principalId]",
                 "scope": "[resourceGroup().id]"
-            },
-            "dependsOn": [
-                "[concat('Microsoft.Resources/deploymentScripts/', 'sleep')]"
-            ]
+            }
         },
         {
-            "dependsOn": ["[concat('Microsoft.Authorization/roleAssignments/', parameters('roleGuid'))]"],
             "type": "Microsoft.Resources/deploymentScripts",
             "apiVersion": "2020-10-01",
             "name": "runPowerShellInline",
             "location": "[resourceGroup().location]",
             "kind": "AzurePowerShell",
             "identity": {
-                "type": "userAssigned",
+                "type": "UserAssigned",
                 "userAssignedIdentities": {
                     "[resourceID('Microsoft.ManagedIdentity/userAssignedIdentities/',variables('identityName'))]": {}
                 }
             },
+            "dependsOn": [
+                "[concat('Microsoft.Authorization/roleAssignments/', parameters('roleGuid'))]"
+            ],
             "properties": {
                 "forceUpdateTag": "1",
                 "azPowerShellVersion": "3.0",
-                "arguments": "[concat('-Workspace ', parameters('workspaceName'), ' -ResourceGroup ', resourceGroup().name, ' -Connectors ', parameters('dataConnectorsList'))]",
-                "primaryScriptUri": "https://raw.githubusercontent.com/Azure/Azure-Sentinel/master/Tools/Sentinel-All-In-One/ARMTemplates/Scripts/EnableRules.ps1",
+                "arguments": "[variables('alertArguments')]",
+                "primaryScriptUri": "https://raw.githubusercontent.com/OTRF/Microsoft-Sentinel2Go/master/microsoft-sentinel/scripts/Enable-ScheduledAlerts.ps1",
                 "supportingScriptUris": [],
                 "timeout": "PT30M",
                 "cleanupPreference": "OnSuccess",
