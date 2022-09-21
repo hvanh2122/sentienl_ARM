@@ -136,7 +136,7 @@
             }
         },
         {
-            "condition": "[contains(parameters('dataConnectors'), 'LinuxSyslogCollection')]",
+            "condition": "[contains(parameters('dataConnectors'), 'LinuxSyslog')]",
             "type": "Microsoft.OperationalInsights/workspaces/dataSources",
             "apiVersion": "2020-08-01",
             "location": "[parameters('location')]",
