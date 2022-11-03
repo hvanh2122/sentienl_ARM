@@ -168,10 +168,6 @@
                                     "value": "Dynamics365"
                                 },
                                 {
-                                    "label": "DNS Analytics",
-                                    "value": "DNS"
-                                },
-                                {
                                     "label": "Threat Intelligence",
                                     "value": "ThreatIntelligence"
                                 },
